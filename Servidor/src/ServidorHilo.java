@@ -7,8 +7,8 @@
 import java.io.*;
 import java.net.*;
 import java.util.logging.*;
-	import java.sql.*;
-//import com.mysql.jdbc.*; 
+import java.sql.*;
+
 
 
 public class ServidorHilo extends Thread {
@@ -151,7 +151,7 @@ public class ServidorHilo extends Thread {
     public Connection conectar(){
         try{
             Class.forName("com.mysql.jdbc.Driver");
-            String BaseDeDatos = "jdbc:mysql://localhost:3306/appPokemon?user=root&password=Bull3tproof#!";
+            String BaseDeDatos = "jdbc:mysql://localhost/appPokemon?user=root&password=Bull3tproof#!";
             setConexion(DriverManager.getConnection(BaseDeDatos)); 
 
 
