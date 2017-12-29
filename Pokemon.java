@@ -12,7 +12,7 @@ public class Pokemon{
 		return nombre;
 	}
 
-	public String obtenerImagen(){
+	public int obtenerImagen(){
 		return id;
 	}
 

@@ -118,7 +118,7 @@ String[] mensajeAplicacion;
 		System.out.println("|-----------------------------------------|");
 		System.out.println("|		"+ ipFuente + " 	|  	" + ipDestino + "	|");
 		System.out.println("|-----------------------------------------|");
-		System.out.println("|  "+ estadoMaquina + "  |  " + codigoRespuesta + "  |  " + printMA(mensajeAplicacion));
+		System.out.println("|  "+ estadoMaquina + "  |  " + codigoRespuesta + " | "+idUsuario +"  |  " + printMA(mensajeAplicacion));
 		System.out.println("|-----------------------------------------|");
 	}
 
