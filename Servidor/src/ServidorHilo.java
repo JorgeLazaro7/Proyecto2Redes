@@ -147,11 +147,12 @@ public class ServidorHilo extends Thread {
     /**
     *Conecta con la base de datos
     *Es necesario descargar un Driver e instalarlo para lograr la conexion a la BD
+    *Añadimos useSSL=false para permitir correr al servidor sin un certificado SSL
     */
     public Connection conectar(){
         try{
             Class.forName("com.mysql.jdbc.Driver");
-            String BaseDeDatos = "jdbc:mysql://localhost/appPokemon?user=root&password=Bull3tproof#!";
+            String BaseDeDatos = "jdbc:mysql://localhost/appPokemon?user=root&password=Bull3tproof#!&useSSL=false";
             setConexion(DriverManager.getConnection(BaseDeDatos)); 
 
 
