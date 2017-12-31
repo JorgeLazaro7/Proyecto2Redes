@@ -73,7 +73,9 @@ public class ServidorHilo extends Thread {
 */
     public void leerPaquete(Protocolo paquetin){
         int codigoRespuesta; //Indica el tipo de mensaje que se está recibiendo
+        int estadoMaquina;
         codigoRespuesta = paquetin.obtenerCR();
+        estadoMaquina = paquetin.obtenerEM();
 
         //Case, dependiendo del estado de la maquina, se realiza una accion
         switch (codigoRespuesta){    
@@ -87,12 +89,6 @@ public class ServidorHilo extends Thread {
             case 12:    
                 iniciarSesion(paquetin);
                 break;
-            case 20:    
-                System.out.println("20");
-                break;
-            case 21:    
-                System.out.println("21");
-                break;
             case 22:    
                 System.out.println("22");
                 break;
@@ -100,7 +96,7 @@ public class ServidorHilo extends Thread {
                 System.out.println("23");
                 break;
             case 30:    
-                System.out.println("30");
+                aceptar(paquetin, estadoMaquina);//aplica cuando el cliente acepta atrapar un pokemon o intentar atraparlo de nuevo
                 break;
             case 31:    
                 System.out.println("31");
@@ -195,6 +191,7 @@ public class ServidorHilo extends Thread {
     /**
     *1- Consulta a la base cuantos registros de pokemon hay.
     *2- Elige un pokemon aleatorio para enviarlo al cliente
+    *3- Envía al cliente un  paquete con el código de respuesta = 20 (¿capturar al pokemon x?)
     */
     public boolean enviarPokemonAleatorio(Protocolo paquetin){
         int np=-1; //El numero de pokemon que hay en la BD
@@ -258,29 +255,30 @@ public class ServidorHilo extends Thread {
     public void verPokedex(Protocolo paquetin){
 
         ResultSet rs;
-        Connection conexion = conectar(); //lo utilizaremos para la consulta a la BD
-        String query;
+        
+        String query="";
         Statement sentencia;
         String imagen="";//Imagen del pokemon
-        String nombre=":::::::::::::::-n"; //nombre del pokemon
+        String nombre=""; //nombre del pokemon
         int id= paquetin.obtenerIdUsuario();
         int prueba=-1;
 
         try{
 
+            Connection conexion = conectar(); //lo utilizaremos para la consulta a la BD
             sentencia = conexion.createStatement();//creamos la conexion con la BD
-            //query = "SELECT nombre, imagen FROM (SELECT Usuario.idUsuario, idPokemon FROM Usuario JOIN Usuario_Pokemon ON Usuario.idUsuario=Usuario_Pokemon.idUsuario) AS T1 JOIN Pokemon ON T1.idPokemon=Pokemon.idPokemon WHERE idUsuario='"+id+"'";
-            query = "SELECT nombre imagen FROM (SELECT Usuario.idUsuario, idPokemon FROM Usuario JOIN Usuario_Pokemon ON Usuario.idUsuario=Usuario_Pokemon.idUsuario) AS T1 JOIN Pokemon ON T1.idPokemon=Pokemon.idPokemon WHERE idUsuario='"+id+"'";
-
+            query = "SELECT nombre, imagen FROM (SELECT Usuario.idUsuario, idPokemon FROM Usuario JOIN Usuario_Pokemon ON Usuario.idUsuario=Usuario_Pokemon.idUsuario) AS T1 JOIN Pokemon ON T1.idPokemon=Pokemon.idPokemon WHERE idUsuario='"+id+"'";
+            //query = "SELECT nombre, imagen FROM (SELECT Usuario.idUsuario, idPokemon FROM Usuario JOIN Usuario_Pokemon ON Usuario.idUsuario=Usuario_Pokemon.idUsuario) AS T1 JOIN Pokemon ON T1.idPokemon=Pokemon.idPokemon WHERE idUsuario='1'";
+           
             rs = sentencia.executeQuery(query);//ejecuta la sentencia en la BD
             
             if(rs.wasNull())
               System.out.println("consulta vacía");  
 
             while(rs.next()){
-                System.out.println(nombre+"\n");
+                
                 nombre = rs.getString(1);//obtenemos el resultado de la BD
-                imagen = rs.getString(2);//obtenemos el resultado de la BD
+                imagen += rs.getString(2);//obtenemos el resultado de la BD
                 
             }
 
@@ -294,18 +292,56 @@ public class ServidorHilo extends Thread {
             
             
             Protocolo respuesta = new Protocolo(9999,1111,2,11,paquetin.obtenerIdUsuario(),m);
-           // enviarPaquete(respuesta);
+            enviarPaquete(respuesta);
             respuesta.print();
 
 
         }catch (SQLException e) {
             e.printStackTrace(); 
+        }catch (Exception e) {
+            System.out.println("Error " + e);
         }
-
-
     }
 
+/**
+*Dos posibles acciones
+*Si el estado actual de la maquina es 2 (Desea capturar el pokemon ofrecido), envia al cliente un paquete con el número de intentos
+*que tiene para capturarlo.
+*
+*
+*Si el estado actual de la maquina es 4 (Desea reintentar capturar al pokemon) envia al cliente un paquete con el número
+*de intentos que le restan para capturarlo
+*/
+public boolean aceptar(Protocolo paquetin, int estadoMaquina){
+    if(estadoMaquina == 2){
+        //Construimos el paquete de respuesta para enviar al cliente:
+            String[] m = paquetin.obtenerMA(); //contruimos el "MensajeDeAplicacion"
+            m[0] = "26";
+            m[1] = m[1]; //se mantiene intacto, ya que es el ID del pokemon que se presentó previamente al usuario
+            m[2] = "3"; //
 
+        Protocolo respuesta = new Protocolo(9999,1111,2,26,paquetin.obtenerIdUsuario(),m);
+        enviarPaquete(respuesta);
+        respuesta.print();
+        return true;
+    }
+
+    //Si el estado actual de la maquina es 4 
+    //Construimos el paquete de respuesta para enviar al cliente:
+        String[] m = paquetin.obtenerMA(); //contruimos el "MensajeDeAplicacion"
+        m[0] = "21";
+        m[1] = m[1]; //se mantiene intacto, ya que es el ID del pokemon que se presentó previamente al usuario
+        int intentos = Integer.parseInt(m[2]);
+        intentos -= 1;
+
+        m[2]= Integer.toString(intentos);//convertimos de nuevo a String y almacenamos
+
+        Protocolo respuesta = new Protocolo(9999,1111,4,21,paquetin.obtenerIdUsuario(),m);
+        enviarPaquete(respuesta);
+        respuesta.print();
+        return true;
+
+}
 
 
 
