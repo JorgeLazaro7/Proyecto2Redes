@@ -56,7 +56,7 @@ public class ServidorHilo extends Thread {
         try {
             //Recibe el paquete del cliente
             Protocolo paquetito = (Protocolo) dis.readObject();
-            paquetito.print();//Imprimimos en pantalla el contenido del paquete
+            
 
             leerPaquete(paquetito);
             
@@ -68,23 +68,23 @@ public class ServidorHilo extends Thread {
 
 /**
 *Recibe un paquete
-*Consulta el campo "Estado actual de la maquina" para conocer el tipo de mensaje
-*Una vez que se obtiene el edoMaquina, se elige la opci&oacute;n a ejecutar en un switch-case
+*Consulta el campo "Codigo de respuesta" para conocer el tipo de mensaje
+*Una vez que se obtiene el codigoRespuesta, se elige la opci&oacute;n a ejecutar en un switch-case
 */
     public void leerPaquete(Protocolo paquetin){
-        int edoMaquina; //Indica el tipo de mensaje que se está recibiendo
-        edoMaquina = paquetin.obtenerEM();
+        int codigoRespuesta; //Indica el tipo de mensaje que se está recibiendo
+        codigoRespuesta = paquetin.obtenerCR();
 
         //Case, dependiendo del estado de la maquina, se realiza una accion
-        switch (edoMaquina){    
+        switch (codigoRespuesta){    
             case 10:
-                System.out.println("opcion 10");
+                //El cliente solicita un pokemon a capturar
+                enviarPokemonAleatorio(paquetin);
                 break;                
             case 11:
-                System.out.println("opcion 11");
+                verPokedex(paquetin);
                 break;
             case 12:    
-                System.out.println("Haz elegido iniciar sesión");
                 iniciarSesion(paquetin);
                 break;
             case 20:    
@@ -110,7 +110,7 @@ public class ServidorHilo extends Thread {
                 break;
 
             default:
-                System.out.println("Error en protocolo PKP: Mensaje "+ edoMaquina +" desconocido");
+                System.out.println("Error en protocolo PKP: Mensaje "+ codigoRespuesta +" desconocido");
                 break;
 
 
@@ -118,23 +118,198 @@ public class ServidorHilo extends Thread {
 
     }
 
+    /**
+*Env&iacute; un objeto del tipo 'Protocolo' al servidor a trav&eacute;s del canal de salida
+*/
+    public void enviarPaquete(Protocolo paquetin){
+        try {
 
-    public void iniciarSesion(Protocolo paquetin){
+            /**
+            *Envia el paquete al cliente a traves del canal de salida utilizando writeObject
+            *de la clase java.io.OutputStream
+            */
+            dos.writeObject(paquetin); 
+
+        } catch (IOException ex) {
+            Logger.getLogger(ServidorHilo.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+
+/**
+*Obtiene de los argumentos del paquete "MensajeDeAplicacion" el nickname del usuario y su contraseña
+*Envía a traves del socket un paquete de respuesta.
+*
+*Envía al cliente un paquete con un código de respuesta 24 y el id del usuario si el inicio de sesión fué exitoso
+*o envía un paquete con código de respuesta 25 y un id = -1 si el inicio de sesión fué rechazado
+*/
+    public boolean iniciarSesion(Protocolo paquetin){
 
         String[] ma = paquetin.obtenerMA(); //obtiene el arreglo que representa a la seccion 'mensajeAplicacion'
         String user = ma[1]; //El nombre de usuario
         String pass = ma[2]; //La contraseña del usuario
+        int id;
+        ResultSet rs;
 
-        System.out.println("Usuario: "+user);
-        System.out.println("pass: "+pass);
-
-        conectar();
-       
+        Connection conexion = conectar(); //lo utilizaremos para la consulta a la BD
 
 
-        
+        //consulta a la base de datos
+        try{
+            Statement sentencia = conexion.createStatement();
+            String query = "SELECT idUsuario FROM Usuario where nickname = '"+user+"' and password = SHA1('"+ pass+"')";
+            
+            rs = sentencia.executeQuery(query);//ejecuta la sentencia en la BD
+     
+
+            if(rs.next()){
+                id = rs.getInt("idUsuario");//obtenemos el resultado de la BD
+               
+                conexion.close(); //se cierra la conexion con la BD
+                System.out.println("Inicio de sesión exitoso"); 
+                //Construimos el paquete de respuesta para enviar al cliente:
+                Protocolo respuesta = new Protocolo(9999,1111,12,24,id,ma);
+                enviarPaquete(respuesta);
+
+                return true;
+            }
+
+            System.out.println("No existe el usuario/o la contraseña es incorrecta"); 
+            conexion.close(); //se cierra la conexion con la BD
+
+            //Construimos el paquete de respuesta para enviar al cliente
+            Protocolo respuesta = new Protocolo(9999,1111,12,25,-1,ma);
+            enviarPaquete(respuesta);
+
+            return false;
+            
+            
+            
+        }catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+    /**
+    *1- Consulta a la base cuantos registros de pokemon hay.
+    *2- Elige un pokemon aleatorio para enviarlo al cliente
+    */
+    public boolean enviarPokemonAleatorio(Protocolo paquetin){
+        int np=-1; //El numero de pokemon que hay en la BD
+        int aleatorio; //un numero aleatorio que representa el ID de un pokemon
+        ResultSet rs;
+        Connection conexion = conectar(); //lo utilizaremos para la consulta a la BD
+        String query;
+        Statement sentencia;
+        String imagen="";//Imagen del pokemon
+        String nombre=""; //nombre del pokemon
+
+            //1-Consulta a la base cuantos registros de pokemon hay
+        try{
+            sentencia = conexion.createStatement();//creamos la conexion con la BD
+            query = "select count(*) from Pokemon";
+
+            rs = sentencia.executeQuery(query);//ejecuta la sentencia en la BD
+     
+
+            while(rs.next()){
+                np = rs.getInt("count(*)");//obtenemos el resultado de la BD
+            }
+
+
+
+
+            //2-SOLICITAMOS UN POKEMON ALEATORIO
+            aleatorio = (int) (Math.random() * np) + 1; //Selecciona un número aleatorio entre 1 y np
+
+            query = "select * from Pokemon where idPokemon = "+aleatorio; //solicitamos un pokemon aleatorio a la BD
+
+            rs = sentencia.executeQuery(query);//ejecuta la sentencia en la BD
+            while(rs.next()){
+                nombre = rs.getString("nombre");//obtenemos el resultado de la BD
+                imagen = rs.getString("imagen");//obtenemos el resultado de la BD
+            }
+
+            conexion.close(); //se cierra la conexion con la BD
+
+            //Construimos el paquete de respuesta para enviar al cliente:
+            String[] m = new String[4];
+            m[0] = "20";
+            m[1] = Integer.toString(aleatorio);
+            m[2] = imagen;
+            m[3] = nombre;
+            
+            Protocolo respuesta = new Protocolo(9999,1111,2,20,paquetin.obtenerIdUsuario(),m);
+            enviarPaquete(respuesta);
+            respuesta.print();
+
+                return true;
+
+            
+        }catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
 
     }
+
+    public void verPokedex(Protocolo paquetin){
+
+        ResultSet rs;
+        Connection conexion = conectar(); //lo utilizaremos para la consulta a la BD
+        String query;
+        Statement sentencia;
+        String imagen="";//Imagen del pokemon
+        String nombre=":::::::::::::::-n"; //nombre del pokemon
+        int id= paquetin.obtenerIdUsuario();
+        int prueba=-1;
+
+        try{
+
+            sentencia = conexion.createStatement();//creamos la conexion con la BD
+            //query = "SELECT nombre, imagen FROM (SELECT Usuario.idUsuario, idPokemon FROM Usuario JOIN Usuario_Pokemon ON Usuario.idUsuario=Usuario_Pokemon.idUsuario) AS T1 JOIN Pokemon ON T1.idPokemon=Pokemon.idPokemon WHERE idUsuario='"+id+"'";
+            query = "SELECT nombre imagen FROM (SELECT Usuario.idUsuario, idPokemon FROM Usuario JOIN Usuario_Pokemon ON Usuario.idUsuario=Usuario_Pokemon.idUsuario) AS T1 JOIN Pokemon ON T1.idPokemon=Pokemon.idPokemon WHERE idUsuario='"+id+"'";
+
+            rs = sentencia.executeQuery(query);//ejecuta la sentencia en la BD
+            
+            if(rs.wasNull())
+              System.out.println("consulta vacía");  
+
+            while(rs.next()){
+                System.out.println(nombre+"\n");
+                nombre = rs.getString(1);//obtenemos el resultado de la BD
+                imagen = rs.getString(2);//obtenemos el resultado de la BD
+                
+            }
+
+            conexion.close(); //se cierra la conexion con la BD
+
+            //Construimos el paquete de respuesta para enviar al cliente:
+            String[] m = new String[4]; //contruimos el "MensajeDeAplicacion"
+            m[0] = "11";
+            m[1] = Integer.toString(id);
+            m[2] = imagen;
+            
+            
+            Protocolo respuesta = new Protocolo(9999,1111,2,11,paquetin.obtenerIdUsuario(),m);
+           // enviarPaquete(respuesta);
+            respuesta.print();
+
+
+        }catch (SQLException e) {
+            e.printStackTrace(); 
+        }
+
+
+    }
+
+
+
+
+
+
 
     public Connection getConexion() {
         return conexion;
@@ -158,9 +333,9 @@ public class ServidorHilo extends Thread {
 
             //Verificamos la conexion con la BD
             if (getConexion() != null) {
-                System.out.println("Conexion exitosa!");
+                System.out.println("Conexion exitosa a la BD!");
             } else {
-                System.out.println("Conexion fallida!");
+                System.out.println("Conexion fallida! a la BD");
             }
 
         }catch (Exception e) {
