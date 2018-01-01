@@ -12,12 +12,12 @@ import java.io.Serializable;
 
 public class Protocolo implements Serializable{
 
-int ipFuente;
-int ipDestino;
-int estadoMaquina;
-int codigoRespuesta=-1;
-int idUsuario;
-String[] mensajeAplicacion;
+private int puertoFuente;
+private int puertoDestino;
+private int estadoMaquina;
+private int codigoRespuesta;
+private int idUsuario;
+private String[] mensajeAplicacion;
 
 
 /**
@@ -28,33 +28,44 @@ String[] mensajeAplicacion;
 *mensajeAplicacion -> representa los mensajes que se envian entre el servidor y el cliente
 */
 
-	public Protocolo(int ipFuente, int ipDestino, int estadoMaquina, int codigoRespuesta, int idUsuario, String[] mensajeAplicacion){
-		this.ipFuente = ipFuente;
-		this.ipDestino = ipDestino;
+	public Protocolo(int puertoFuente, int puertoDestino, int estadoMaquina, int codigoRespuesta, int idUsuario, String[] mensajeAplicacion){
+		this.puertoFuente = puertoFuente;
+		this.puertoDestino = puertoDestino;
 		this.estadoMaquina = estadoMaquina;
 		this.codigoRespuesta = codigoRespuesta;
 		this.idUsuario = idUsuario;
 		this.mensajeAplicacion = mensajeAplicacion;
 	}
 
-
-	public int obtenerIpFuente(){
-		return ipFuente;
+	public Protocolo(){
+		puertoFuente = -1;
+		puertoDestino = -1;
+		estadoMaquina = -1;
+		codigoRespuesta = -1;
+		idUsuario = -1;
+		mensajeAplicacion = null;
 	}
 
-	public int obtenerIpDestino(){
-		return ipDestino;
+
+	public int obtenerPuertoFuente(){
+		return puertoFuente;
 	}
 
-	public void modificarIp(int ipSource, int ipDestiny){
-		ipFuente = ipSource;
-		ipDestino = ipDestiny;
+	public int obtenerPuertoDestino(){
+		return puertoDestino;
+	}
+
+	public void modificarPuertoFuente(int sourcePort){
+		puertoFuente = sourcePort;
+	}
+
+	public void modificarPuertoDestino(int destPort){
+		puertoDestino = destPort;
 	}
 
 	/**
 	*Devuelve el estado de la maquina
 	*/
-
 	public int obtenerEM(){
 		return estadoMaquina;
 	}
@@ -70,10 +81,14 @@ String[] mensajeAplicacion;
 		return idUsuario;
 	}
 
+	public void modificarIdUsuario(int id){
+		idUsuario = id;
+	}
+
 	/**
 	*Devuelve el c&oacute;digo de respuesta
 	*/
-	public int obtenerNuevoCR(){
+	public int obtenerCR(){
 		return codigoRespuesta;
 	}
 
@@ -91,6 +106,10 @@ String[] mensajeAplicacion;
 	*/
 	public String[] obtenerMA(){
 		return mensajeAplicacion;
+	}
+
+	public void modificarMA(String[] ma){
+		mensajeAplicacion=ma;
 	}
 
 	/**
@@ -116,13 +135,11 @@ String[] mensajeAplicacion;
 	*/
 	public void print(){
 		System.out.println("|-----------------------------------------|");
-		System.out.println("|		"+ ipFuente + " 	|  	" + ipDestino + "	|");
+		System.out.println("|		"+ puertoFuente + " 	|  	" + puertoDestino + "	|");
 		System.out.println("|-----------------------------------------|");
 		System.out.println("|  "+ estadoMaquina + "  |  " + codigoRespuesta + " | "+idUsuario +"  |  " + printMA(mensajeAplicacion));
 		System.out.println("|-----------------------------------------|");
 	}
-
-	
 
 	public static void main(String[] args){
 		String[] m = new String[4];
@@ -130,9 +147,5 @@ String[] mensajeAplicacion;
 		m[1] = "1";
 		m[2] = "";
 		m[3] = "";
-		
-		
-		
 	}
-
 }
