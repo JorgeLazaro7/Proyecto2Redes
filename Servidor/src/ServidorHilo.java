@@ -17,6 +17,14 @@ public class ServidorHilo extends Thread {
     private ObjectInputStream dis;//Canal de entrada de datos desde el cliente (recibe datos del cliente)
     private Connection conexion; //Conexion a la BD
 
+    private Protocolo prot; //El protocolo que se va a enviar 
+    //(lo voy a inicializar en el constructor sin parámetros 
+    //(el constructor por default) y lo iremos modificando cada 
+    //vez que nuestro mensaje de respuesta cambie en algo), esto 
+    //para no estar creando un nuevo objeto protocolo por cada 
+    //mensaje que se envía y ademas por que siempre serán pocos 
+    //cambios de una respuesta a otra
+
     /**
     *CONSTRUCTOR
     *Recibe un socket del cliente
@@ -26,6 +34,11 @@ public class ServidorHilo extends Thread {
         this.socket = socket;
         
         try {
+
+            prot = new Protocolo();
+            prot.modificarPuertoFuente(socket.getLocalPort());
+            prot.modificarPuertoDestino(socket.getPort());
+
             //inicializa los canales de comunicacion
             dos = new ObjectOutputStream(socket.getOutputStream());
             dis = new ObjectInputStream(socket.getInputStream()); 
@@ -64,6 +77,8 @@ public class ServidorHilo extends Thread {
                 
             } catch (Exception ex) {
                 Logger.getLogger(ServidorHilo.class.getName()).log(Level.SEVERE, null, ex);
+                cerrar = true;
+                System.out.println("Error desconocido");
             }
         }
         desconnectar();
@@ -85,7 +100,7 @@ public class ServidorHilo extends Thread {
             case 10:
                 //El cliente solicita un pokemon a capturar
                 enviarPokemonAleatorio(paquetin);
-                System.out.println("pidió un porkemon aleatorio");
+                System.out.println("pidió un pokemon aleatorio");
                 break;                
             case 11:
                 verPokedex(paquetin);
@@ -128,6 +143,7 @@ public class ServidorHilo extends Thread {
             *Envia el paquete al cliente a traves del canal de salida utilizando writeObject
             *de la clase java.io.OutputStream
             */
+            dos.reset();
             dos.writeObject(paquetin); 
 
             System.out.println("Protocolo enviado");
@@ -170,14 +186,24 @@ public class ServidorHilo extends Thread {
                
                 conexion.close(); //se cierra la conexion con la BD
                 System.out.println("Inicio de sesión exitoso"); 
+
                 //Construimos el paquete de respuesta para enviar al cliente:
-                Protocolo respuesta = new Protocolo(9999,1111,12,24,id,ma);
-                enviarPaquete(respuesta);
+                //Cambio aqui: Ya no creo un nuevo protocolo, modifico el que ya cree con los datos que debo enviar, 
+                //como puerto origen y destno siempre van a ser iguales, a esos no le muevo nada
+                prot.modificarEM(0);
+                prot.modificarCR(24);
+                prot.modificarIdUsuario(id);
+
+                ma[0] = "24";
+                prot.modificarMA(ma);
+
+                //Protocolo respuesta = new Protocolo(9999,1111,12,24,id,ma);
+                enviarPaquete(prot);
 
                 return true;
             }
 
-            System.out.println("No existe el usuario/o la contraseña es incorrecta"); 
+            System.out.println("No existe el usuario o la contraseña es incorrecta"); 
             conexion.close(); //se cierra la conexion con la BD
 
             //Construimos el paquete de respuesta para enviar al cliente
@@ -244,9 +270,14 @@ public class ServidorHilo extends Thread {
             m[1] = Integer.toString(aleatorio);
             m[2] = imagen;
             m[3] = nombre;
+
+            // Igual que en iniciar sesion, cambio aqui para que en vez de crear un nuevo protocolo, modifico el que ya tengo.
+            prot.modificarEM(1);
+            prot.modificarCR(20);
+            prot.modificarMA(m);
             
-            Protocolo respuesta = new Protocolo(9999,1111,2,20,paquetin.obtenerIdUsuario(),m);
-            enviarPaquete(respuesta);
+            //Protocolo respuesta = new Protocolo(9999,1111,2,20,paquetin.obtenerIdUsuario(),m);
+            enviarPaquete(prot);
             
 
                 return true;
