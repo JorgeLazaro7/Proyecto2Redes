@@ -47,12 +47,17 @@ public class Cliente2 implements Serializable{
     		//if (!espera){
 	    		try{
 	    			Protocolo entrada = (Protocolo) dis.readObject();
+                    System.out.println("Protocolo recibido");
+                    entrada.print();
+
 	    			//espera = true;
 	    			leerPaquete(entrada);
 	    		} catch (Exception ex) {
 	            	Logger.getLogger(Cliente2.class.getName()).log(Level.SEVERE, null, ex);
 	            	System.out.println("no se recibió el paquete");
 	            	//conectado=false;
+                    cerrar = true;
+                    System.out.println("Ocurrió un error, la aplicacion finalizará");
 	        	}
 	        //}
     	}
@@ -88,14 +93,10 @@ public class Cliente2 implements Serializable{
 			            	case 1:
 			            		// Se envia código de solicitar pokemon aleatorio
 			            		System.out.println("\nPediste un pokemon aleatorio");
-			            		prot.modificarEM(2);
+			            		prot.modificarEM(1);
 			            		prot.modificarCR(10);
 			            		cambiaMA("10", null, null, null);
 			            		prot.modificarMA(mensajeAplicacion);
-			            		System.out.println("Protocolo que se va a enviar");
-			            		prot.print();
-			            		System.out.println("Mensaje de aplicacion que se va a enviar");
-			            		System.out.println(Arrays.toString(prot.obtenerMA()));
 			            		enviarPaquete(prot);
 			            		//ejecutar();
 			            		//espera= false;
@@ -118,7 +119,7 @@ public class Cliente2 implements Serializable{
 		            }catch (java.util.InputMismatchException e){
 		            	System.out.println("Opcion incorrecta");
 		            	valido = false;
-            			in.nextLine();
+            	   		in.nextLine();
         			}
 	            } while(!valido); 
 
@@ -134,7 +135,50 @@ public class Cliente2 implements Serializable{
             	System.out.println(entrada.obtenerMA()[3] + "\n");
             	System.out.println(entrada.obtenerMA()[2] + "\n\n");
             	System.out.println("¿Quieres capturarlo?  s/n");
+                valido = true;
+                do{
+                    try{
+                        String opcion2 = in.nextLine();
+                        switch(opcion2){
+                            case "s"://si
+                                System.out.println("Elegiste capturarlo");
+                                // método aceptar pasandole como parámetro solo el protocolo recibido, de ahi sacamos el estado de la máquina
+                                aceptar(entrada);
+                            break;
+                            case "n"://no
+                                System.out.println("Elegiste no capturar el pokemon");
+                                //método rechazar pasando como parámetro solo el protocolo recibido, de ahi sacamos el estado de la máquina
 
+                        }
+                    }catch (java.util.InputMismatchException e){
+                        System.out.println("Opcion incorrecta");
+                        valido = false;
+                        in.nextLine();
+                    }
+                }while(!valido);
+            break;
+            default:
+                System.out.println("Error en el protocolo: Mensaje " + codigoRespuesta + " desconocido");
+                desconectar();
+            break;
+        }
+    }
+
+    public void aceptar(Protocolo p){
+        int estadoM = p.obtenerEM();
+        prot.modificarCR(30);
+        cambiaMA("30", null, null, null);
+        switch(estadoM){
+            case 2: 
+                System.out.println("Elegiste capturar el pokemon");
+                prot.modificarEM(3);
+                prot.modificarMA(mensajeAplicacion);
+                enviarPaquete(prot);
+            break;
+            default:
+                System.out.println("Error en el protocolo: Estado " + estadoM + " desconocido");
+                desconectar();
+            break;
         }
     }
 
@@ -158,7 +202,6 @@ public class Cliente2 implements Serializable{
         prot.modificarPuertoDestino(9999);
         prot.modificarEM(0);
         prot.modificarCR(12);
-
         cambiaMA("12", nickname, pass, null);
         prot.modificarMA(mensajeAplicacion);
         /*
@@ -177,6 +220,10 @@ public class Cliente2 implements Serializable{
 
     public void enviarPaquete(Protocolo p){
     	try{
+            System.out.println("Protocolo que se va a enviar");
+            prot.print();
+            System.out.println("Mensaje de aplicacion que se va a enviar");
+            System.out.println(Arrays.toString(prot.obtenerMA()));
     		dos.reset();
     		dos.writeObject(p);
     	}catch (IOException ex) {
@@ -187,6 +234,7 @@ public class Cliente2 implements Serializable{
     public void desconectar(){
     	try {
             sk.close();
+            cerrar = true;
         } catch (IOException ex) {
             Logger.getLogger(Cliente2.class.getName()).log(Level.SEVERE, null, ex);
         }
