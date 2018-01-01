@@ -52,16 +52,19 @@ public class ServidorHilo extends Thread {
     *Después envía el paquete recibido al metodo leerPaquete para determinar la acci&oacute;n a tomar
     */
     public void run() {
-        
-        try {
-            //Recibe el paquete del cliente
-            Protocolo paquetito = (Protocolo) dis.readObject();
-            
+        boolean cerrar = false;
+        while(!cerrar){
+            try {
+                //Recibe el paquete del cliente
+                Protocolo paquetito = (Protocolo) dis.readObject();
+                System.out.println("Protocolo recibido");
+                paquetito.print();
 
-            leerPaquete(paquetito);
-            
-        } catch (Exception ex) {
-            Logger.getLogger(ServidorHilo.class.getName()).log(Level.SEVERE, null, ex);
+                leerPaquete(paquetito);
+                
+            } catch (Exception ex) {
+                Logger.getLogger(ServidorHilo.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
         desconnectar();
     }
@@ -82,6 +85,7 @@ public class ServidorHilo extends Thread {
             case 10:
                 //El cliente solicita un pokemon a capturar
                 enviarPokemonAleatorio(paquetin);
+                System.out.println("pidió un porkemon aleatorio");
                 break;                
             case 11:
                 verPokedex(paquetin);
@@ -240,6 +244,7 @@ public class ServidorHilo extends Thread {
             
             Protocolo respuesta = new Protocolo(9999,1111,2,20,paquetin.obtenerIdUsuario(),m);
             enviarPaquete(respuesta);
+            System.out.println("Protocolo enviado");
             respuesta.print();
 
                 return true;
@@ -363,7 +368,7 @@ public boolean aceptar(Protocolo paquetin, int estadoMaquina){
     public Connection conectar(){
         try{
             Class.forName("com.mysql.jdbc.Driver");
-            String BaseDeDatos = "jdbc:mysql://localhost/appPokemon?user=root&password=Bull3tproof#!&useSSL=false";
+            String BaseDeDatos = "jdbc:mysql://localhost/appPokemon?user=root&password=password&useSSL=false";
             setConexion(DriverManager.getConnection(BaseDeDatos)); 
 
 
@@ -377,11 +382,6 @@ public boolean aceptar(Protocolo paquetin, int estadoMaquina){
         }catch (Exception e) {
                 e.printStackTrace();
         }
-
         return conexion;
-
     }
-
-
-
 }
