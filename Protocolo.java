@@ -66,7 +66,6 @@ private String[] mensajeAplicacion;
 	/**
 	*Devuelve el estado de la maquina
 	*/
-
 	public int obtenerEM(){
 		return estadoMaquina;
 	}
@@ -80,6 +79,10 @@ private String[] mensajeAplicacion;
 
 	public int obtenerIdUsuario(){
 		return idUsuario;
+	}
+
+	public void modificarIdUsuario(int id){
+		idUsuario = id;
 	}
 
 	/**
@@ -103,6 +106,10 @@ private String[] mensajeAplicacion;
 	*/
 	public String[] obtenerMA(){
 		return mensajeAplicacion;
+	}
+
+	public void modificarMA(String[] ma){
+		mensajeAplicacion=ma;
 	}
 
 	/**
@@ -134,17 +141,11 @@ private String[] mensajeAplicacion;
 		System.out.println("|-----------------------------------------|");
 	}
 
-	
-
 	public static void main(String[] args){
 		String[] m = new String[4];
 		m[0] = "20";
 		m[1] = "1";
 		m[2] = "";
 		m[3] = "";
-		
-		
-		
 	}
-
 }
