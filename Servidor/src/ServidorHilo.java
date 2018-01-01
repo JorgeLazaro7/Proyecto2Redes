@@ -130,6 +130,9 @@ public class ServidorHilo extends Thread {
             */
             dos.writeObject(paquetin); 
 
+            System.out.println("Protocolo enviado");
+            paquetin.print();
+
         } catch (IOException ex) {
             Logger.getLogger(ServidorHilo.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -244,8 +247,7 @@ public class ServidorHilo extends Thread {
             
             Protocolo respuesta = new Protocolo(9999,1111,2,20,paquetin.obtenerIdUsuario(),m);
             enviarPaquete(respuesta);
-            System.out.println("Protocolo enviado");
-            respuesta.print();
+            
 
                 return true;
 
