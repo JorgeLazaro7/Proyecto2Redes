@@ -2,6 +2,12 @@
 *Los canales de entrada y salida reciben y envian objetos
 *Cada hilo que despache a un cliente, debe crear su propio socket para la consulta a la base de datos
 *de esta forma garantizamos la integridad de la lectura y escritura de cada uno
+*
+*El servidor crea un objeto Protocolo cada vez que inicia una conexión con el servidor
+* lo iremos modificando cada vez que nuestro mensaje de respuesta cambie en algo), esto para no estar creando un nuevo objeto protocolo por cada 
+*mensaje que se envía y ademas por que siempre serán pocos 
+*cambios de una respuesta a otra
+*@author Diana Guerrero y Jorge L&aacute;zaro
 */
 
 import java.io.*;
@@ -19,11 +25,7 @@ public class ServidorHilo extends Thread {
 
     private Protocolo prot; //El protocolo que se va a enviar 
     //(lo voy a inicializar en el constructor sin parámetros 
-    //(el constructor por default) y lo iremos modificando cada 
-    //vez que nuestro mensaje de respuesta cambie en algo), esto 
-    //para no estar creando un nuevo objeto protocolo por cada 
-    //mensaje que se envía y ademas por que siempre serán pocos 
-    //cambios de una respuesta a otra
+    //(el constructor por default) 
 
     /**
     *CONSTRUCTOR
@@ -92,6 +94,7 @@ public class ServidorHilo extends Thread {
     public void leerPaquete(Protocolo paquetin){
         int codigoRespuesta; //Indica el tipo de mensaje que se está recibiendo
         int estadoMaquina;
+        int id;//El id del usuario que tiene asignado en la BD
         codigoRespuesta = paquetin.obtenerCR();
         estadoMaquina = paquetin.obtenerEM();
 
@@ -108,8 +111,13 @@ public class ServidorHilo extends Thread {
             case 12:    
                 iniciarSesion(paquetin);
                 break;
-            case 22:    
-                System.out.println("22");
+            case 21:
+                //¿Intentar captura de nuevo? Quedan k intentos.
+                capturarDeNuevo(paquetin);
+                break;
+            case 22:
+                //Envía pokemon capturado    
+                pokemonCapturado(paquetin);
                 break;
             case 23:    
                 System.out.println("23");
@@ -120,17 +128,32 @@ public class ServidorHilo extends Thread {
             case 31:    
                 System.out.println("31");
                 break;
-            case 32:    
-                System.out.println("32");
+            case 32:
+                //El cliente cerró sesión  
+                id = paquetin.obtenerIdUsuario();
+                System.out.println("El cliente "+id +"cerró sesión");
+                desconnectar();
                 break;
 
             default:
-                System.out.println("Error en protocolo PKP: Mensaje "+ codigoRespuesta +" desconocido");
+                error(paquetin);
+
                 break;
 
 
         }
 
+    }
+
+/**
+*Envía un error 401 = El mensaje de codigoRespuesta que recibió el servidor es desconocido
+*/
+
+    public void error(Protocolo paquetin){
+
+        System.out.println("SERVIDOR: Error en protocolo PKP: Mensaje "+ paquetin.obtenerCR() +" desconocido");
+        paquetin.modificarCR(401);
+        enviarPaquete(paquetin);
     }
 
     /**
@@ -167,7 +190,7 @@ public class ServidorHilo extends Thread {
         String[] ma = paquetin.obtenerMA(); //obtiene el arreglo que representa a la seccion 'mensajeAplicacion'
         String user = ma[1]; //El nombre de usuario
         String pass = ma[2]; //La contraseña del usuario
-        int id;
+        int id=-1;
         ResultSet rs;
 
         Connection conexion = conectar(); //lo utilizaremos para la consulta a la BD
@@ -188,7 +211,7 @@ public class ServidorHilo extends Thread {
                 System.out.println("Inicio de sesión exitoso"); 
 
                 //Construimos el paquete de respuesta para enviar al cliente:
-                //Cambio aqui: Ya no creo un nuevo protocolo, modifico el que ya cree con los datos que debo enviar, 
+                //Se modifica el protocolo que ya existe desde un inicio con los datos que debo enviar, 
                 //como puerto origen y destno siempre van a ser iguales, a esos no le muevo nada
                 prot.modificarEM(0);
                 prot.modificarCR(24);
@@ -197,7 +220,6 @@ public class ServidorHilo extends Thread {
                 ma[0] = "24";
                 prot.modificarMA(ma);
 
-                //Protocolo respuesta = new Protocolo(9999,1111,12,24,id,ma);
                 enviarPaquete(prot);
 
                 return true;
@@ -207,8 +229,14 @@ public class ServidorHilo extends Thread {
             conexion.close(); //se cierra la conexion con la BD
 
             //Construimos el paquete de respuesta para enviar al cliente
-            Protocolo respuesta = new Protocolo(9999,1111,12,25,-1,ma);
-            enviarPaquete(respuesta);
+            prot.modificarEM(0);
+            prot.modificarCR(25);
+            prot.modificarIdUsuario(id);
+
+            ma[0] = "25";
+            prot.modificarMA(ma);
+
+            enviarPaquete(prot);
 
             return false;
             
@@ -219,6 +247,26 @@ public class ServidorHilo extends Thread {
             return false;
         }
     }
+
+
+/**
+*Obtiene el n&uacute;mero de intentos restantes
+*Si se agotaron los intentos, responde al cliente con el c&oacute;digo de respuesta 23 (Número de intentos de captura agotados.)
+*
+*Si a&uacute;n le restan intentos, envía al cliente el c&oacute;digo de respuesta 21 (¿Intentar captura de nuevo? Quedan k intentos.)
+*/
+public boolean capturarDeNuevo(Protocolo paquetin){
+    String [] ma = paquetin.obtenerMA(); //obtenemos el mensaje de aplicación
+    String intentos = ma[2]; //el numero de intentos restantes
+
+    if(intentos.equals("0") ){
+        //agotó sus intentos
+        return false;
+    }else{
+        //aún tiene intentos
+        return true;
+    }
+}
 
 
     /**
@@ -272,11 +320,11 @@ public class ServidorHilo extends Thread {
             m[3] = nombre;
 
             // Igual que en iniciar sesion, cambio aqui para que en vez de crear un nuevo protocolo, modifico el que ya tengo.
-            prot.modificarEM(1);
+            prot.modificarEM(2);
             prot.modificarCR(20);
             prot.modificarMA(m);
-            
-            //Protocolo respuesta = new Protocolo(9999,1111,2,20,paquetin.obtenerIdUsuario(),m);
+        
+
             enviarPaquete(prot);
             
 
@@ -290,6 +338,12 @@ public class ServidorHilo extends Thread {
 
     }
 
+/**
+*Consulta en la Base de datos los pokemones que pertenecen al id de un usuario espec&iacute;fico
+*Ya que las imágenes de los pokemones están representadas por un String, se concatenan las im&aacute;genes
+*y desṕués se env&iacute;n a través de un paquete
+*
+*/
     public void verPokedex(Protocolo paquetin){
 
         ResultSet rs;
@@ -299,14 +353,12 @@ public class ServidorHilo extends Thread {
         String imagen="";//Imagen del pokemon
         String nombre=""; //nombre del pokemon
         int id= paquetin.obtenerIdUsuario();
-        int prueba=-1;
 
         try{
 
             Connection conexion = conectar(); //lo utilizaremos para la consulta a la BD
             sentencia = conexion.createStatement();//creamos la conexion con la BD
             query = "SELECT nombre, imagen FROM (SELECT Usuario.idUsuario, idPokemon FROM Usuario JOIN Usuario_Pokemon ON Usuario.idUsuario=Usuario_Pokemon.idUsuario) AS T1 JOIN Pokemon ON T1.idPokemon=Pokemon.idPokemon WHERE idUsuario='"+id+"'";
-            //query = "SELECT nombre, imagen FROM (SELECT Usuario.idUsuario, idPokemon FROM Usuario JOIN Usuario_Pokemon ON Usuario.idUsuario=Usuario_Pokemon.idUsuario) AS T1 JOIN Pokemon ON T1.idPokemon=Pokemon.idPokemon WHERE idUsuario='1'";
            
             rs = sentencia.executeQuery(query);//ejecuta la sentencia en la BD
             
@@ -328,10 +380,13 @@ public class ServidorHilo extends Thread {
             m[1] = Integer.toString(id);
             m[2] = imagen;
             
-            
-            Protocolo respuesta = new Protocolo(9999,1111,2,11,paquetin.obtenerIdUsuario(),m);
-            enviarPaquete(respuesta);
-            respuesta.print();
+            prot.modificarEM(8);
+            prot.modificarCR(11);
+            prot.modificarMA(m);
+            //Protocolo respuesta = new Protocolo(9999,1111,2,11,paquetin.obtenerIdUsuario(),m);
+
+            enviarPaquete(prot);
+            prot.print();
 
 
         }catch (SQLException e) {
@@ -341,47 +396,107 @@ public class ServidorHilo extends Thread {
         }
     }
 
-/**
-*Dos posibles acciones
-*Si el estado actual de la maquina es 2 (Desea capturar el pokemon ofrecido), envia al cliente un paquete con el número de intentos
-*que tiene para capturarlo.
-*
-*
-*Si el estado actual de la maquina es 4 (Desea reintentar capturar al pokemon) envia al cliente un paquete con el número
-*de intentos que le restan para capturarlo
-*/
-public boolean aceptar(Protocolo paquetin, int estadoMaquina){
-    if(estadoMaquina == 2){
-        //Construimos el paquete de respuesta para enviar al cliente:
+    /**
+    *Dos posibles acciones
+    *Si el estado actual de la maquina es 2 (Desea capturar el pokemon ofrecido), envia al cliente un paquete con el número de intentos
+    *que tiene para capturarlo.
+    *
+    *
+    *Si el estado actual de la maquina es 4 (Desea reintentar capturar al pokemon) envia al cliente un paquete con el número
+    *de intentos que le restan para capturarlo
+    *
+    *Verifica que el cliente a&uacute;n tenga intentos restantes, Si se agotaron los intentos, responde al cliente con el c&oacute;digo de respuesta 23 (Número de intentos de captura agotados.)
+    *
+    *Si a&uacute;n le restan intentos, envía al cliente el c&oacute;digo de respuesta 21 (¿Intentar captura de nuevo? Quedan k intentos.)
+    *
+    */
+    public boolean aceptar(Protocolo paquetin, int estadoMaquina){
+        if(estadoMaquina == 3){
+            //Construimos el paquete de respuesta para enviar al cliente:
             String[] m = paquetin.obtenerMA(); //contruimos el "MensajeDeAplicacion"
             m[0] = "26";
             m[1] = m[1]; //se mantiene intacto, ya que es el ID del pokemon que se presentó previamente al usuario
-            m[2] = "3"; //
+            m[2] = "3"; //intentos que tiene el cliente
 
-        Protocolo respuesta = new Protocolo(9999,1111,2,26,paquetin.obtenerIdUsuario(),m);
-        enviarPaquete(respuesta);
-        respuesta.print();
-        return true;
+            prot.modificarEM(3);
+            prot.modificarCR(26);
+            prot.modificarMA(m);
+
+            //Protocolo respuesta = new Protocolo(9999,1111,2,26,paquetin.obtenerIdUsuario(),m);
+            enviarPaquete(prot);
+            prot.print();
+            return true;
+        }else if(estadoMaquina == 4 && capturarDeNuevo(prot)){
+            //Si el estado actual de la maquina es 4 
+        //Construimos el paquete de respuesta para enviar al cliente:
+            String[] m = paquetin.obtenerMA(); //contruimos el "MensajeDeAplicacion"
+            m[0] = "21";
+            m[1] = m[1]; //se mantiene intacto, ya que es el ID del pokemon que se presentó previamente al usuario
+            int intentos = Integer.parseInt(m[2]);
+            intentos -= 1;
+
+            m[2]= Integer.toString(intentos);//convertimos de nuevo a String y almacenamos
+
+            prot.modificarEM(4);
+            prot.modificarCR(21);
+            prot.modificarMA(m);
+
+            //Protocolo respuesta = new Protocolo(9999,1111,4,21,paquetin.obtenerIdUsuario(),m);
+            enviarPaquete(prot);
+            prot.print();
+            return true;
+
+        }else{
+            prot.modificarCR(23); //intentos agotados
+            enviarPaquete(prot);
+            return true;
+        }
+        //System.out.println("SERVIDOR: ERROR, Estado Maquina " + estadoMaquina + " desconocido");
+
+        
+
     }
 
-    //Si el estado actual de la maquina es 4 
-    //Construimos el paquete de respuesta para enviar al cliente:
-        String[] m = paquetin.obtenerMA(); //contruimos el "MensajeDeAplicacion"
-        m[0] = "21";
-        m[1] = m[1]; //se mantiene intacto, ya que es el ID del pokemon que se presentó previamente al usuario
-        int intentos = Integer.parseInt(m[2]);
-        intentos -= 1;
 
-        m[2]= Integer.toString(intentos);//convertimos de nuevo a String y almacenamos
+/**
+*Devuelve al cliente la imágen del pokemón que se captur&oacute;
+*/
+    public void pokemonCapturado(Protocolo paquetin){
+        ResultSet rs;
+        String query;
+        String imagen="";
+        Statement sentencia=null;
+        String[] m = paquetin.obtenerMA(); //obtenemos el arreglo "MensajeAplicacion"
+        int id = Integer.parseInt(m[1]); //id del pokemon
 
-        Protocolo respuesta = new Protocolo(9999,1111,4,21,paquetin.obtenerIdUsuario(),m);
-        enviarPaquete(respuesta);
-        respuesta.print();
-        return true;
+        try{
 
-}
+            query = "select * from Pokemon where idPokemon = "+id; //solicitamos un pokemon aleatorio a la BD
 
+            rs = sentencia.executeQuery(query);//ejecuta la sentencia en la BD
+            while(rs.next()){
+                imagen = rs.getString("imagen");//obtenemos el resultado de la BD
+            }
 
+                conexion.close(); //se cierra la conexion con la BD
+        }catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        
+        m[0] = "22";
+        m[1] = m[1];//se mantiene intacto, ya que es el ID del pokemon que se presentó previamente al usuario
+        m[2] = "200";//tamaño de la imagen
+        m[3] = imagen;
+
+        prot.modificarEM(5);
+        prot.modificarCR(22);
+        prot.modificarMA(m);
+
+        enviarPaquete(prot);
+        prot.print();//imprmimos el protocolo
+
+    }
 
 
 
@@ -401,7 +516,7 @@ public boolean aceptar(Protocolo paquetin, int estadoMaquina){
     public Connection conectar(){
         try{
             Class.forName("com.mysql.jdbc.Driver");
-            String BaseDeDatos = "jdbc:mysql://localhost/appPokemon?user=root&password=password&useSSL=false";
+            String BaseDeDatos = "jdbc:mysql://localhost/appPokemon?user=root&password=Bull3tproof#!&useSSL=false";
             setConexion(DriverManager.getConnection(BaseDeDatos)); 
 
 
