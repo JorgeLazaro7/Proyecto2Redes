@@ -77,7 +77,7 @@ public class ServidorHilo extends Thread {
                 //Recibe el paquete del cliente
                 Protocolo paquetito = (Protocolo) dis.readObject();
                 System.out.println("Protocolo recibido");
-                paquetito.print();
+                
 
                 leerPaquete(paquetito);
                 
@@ -174,7 +174,7 @@ public class ServidorHilo extends Thread {
             dos.writeObject(paquetin); 
 
             System.out.println("Protocolo enviado");
-            paquetin.print();
+            
 
         } catch (IOException ex) {
             Logger.getLogger(ServidorHilo.class.getName()).log(Level.SEVERE, null, ex);
@@ -359,8 +359,8 @@ public class ServidorHilo extends Thread {
             while(rs.next()){
                 
                 nombre = rs.getString(1);//obtenemos el resultado de la BD
-                imagen += rs.getString(2);//obtenemos el resultado de la BD
-                pokedex += "\n\n" + nombre + "\n" + imagen+ "\n" + imagen;
+                imagen = rs.getString(2);//obtenemos el resultado de la BD
+                pokedex += "\n\n" + nombre + "\n" + imagen+ "\n";
                 
             }
 
@@ -378,7 +378,7 @@ public class ServidorHilo extends Thread {
             //Protocolo respuesta = new Protocolo(9999,1111,2,11,paquetin.obtenerIdUsuario(),m);
 
             enviarPaquete(prot);
-            prot.print();
+            
 
 
         }catch (SQLException e) {
@@ -524,7 +524,7 @@ public class ServidorHilo extends Thread {
         prot.modificarMA(m);
 
         enviarPaquete(prot);
-        prot.print();//imprmimos el protocolo
+       
 
     }
 
