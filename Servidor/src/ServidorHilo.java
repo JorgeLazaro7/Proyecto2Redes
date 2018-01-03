@@ -341,6 +341,7 @@ public class ServidorHilo extends Thread {
         String imagen="";//Imagen del pokemon
         String nombre=""; //nombre del pokemon
         int id= paquetin.obtenerIdUsuario();
+        String pokedex="";
 
         try{
 
@@ -357,6 +358,7 @@ public class ServidorHilo extends Thread {
                 
                 nombre = rs.getString(1);//obtenemos el resultado de la BD
                 imagen += rs.getString(2);//obtenemos el resultado de la BD
+                pokedex += "\n\n" + nombre + "\n" + imagen;
                 
             }
 
@@ -366,7 +368,7 @@ public class ServidorHilo extends Thread {
             String[] m = new String[4]; //contruimos el "MensajeDeAplicacion"
             m[0] = "11";
             m[1] = Integer.toString(id);
-            m[2] = imagen;
+            m[2] = pokedex;
             
             prot.modificarEM(8);
             prot.modificarCR(11);
@@ -426,12 +428,29 @@ public class ServidorHilo extends Thread {
     public void captura(int intentosR){
         double captura = Math.random(); // Generamos un número aleatorio entre 0 y 1 
                                             //para decidir si la captura fué exitosa o no
+        ResultSet rs;
+        String query="";
+        Statement sentencia;
+
 
         if (captura < 0.5){
             // la captura fué exitosa registra la captura en la base de datos (insert) regresa protocolo con EM 5 CR 22 
             ////////////////////////////////////////////////////////////////////////
             
-            // Se hace el insert a la base de datos Esto falta
+            // Se hace la inserción a la base de datos
+            try{
+                Connection conexion = conectar(); //lo utilizaremos para la consulta a la BD
+                sentencia = conexion.createStatement();//creamos la conexion con la BD
+                query = "Insert into Usuario_Pokemon (idUsuario,idPokemon) values ("+prot.obtenerIdUsuario()+","+idPokemon+")";
+                
+                rs = sentencia.executeQuery(query);//ejecuta la sentencia en la BD
+
+            }catch (SQLException e) {
+                e.printStackTrace(); 
+            }catch (Exception e) {
+                System.out.println("Error " + e);
+            }
+            
 
             ////////////////////////////////////////////////////////////////////////
                 
@@ -517,7 +536,7 @@ public class ServidorHilo extends Thread {
     public Connection conectar(){
         try{
             Class.forName("com.mysql.jdbc.Driver");
-            String BaseDeDatos = "jdbc:mysql://localhost/appPokemon?user=root&password=password&useSSL=false";
+            String BaseDeDatos = "jdbc:mysql://localhost/appPokemon?user=root&password=Bull3tproof#!&useSSL=false";
             setConexion(DriverManager.getConnection(BaseDeDatos)); 
 
 
