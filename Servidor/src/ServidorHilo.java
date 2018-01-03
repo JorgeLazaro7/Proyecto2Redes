@@ -26,6 +26,10 @@ public class ServidorHilo extends Thread {
     private Protocolo prot; //El protocolo que se va a enviar 
     //(lo voy a inicializar en el constructor sin parámetros 
     //(el constructor por default) 
+    int idPokemon;
+
+    String imagenPokemon;
+    String nombrePokemon;
 
     /**
     *CONSTRUCTOR
@@ -111,10 +115,10 @@ public class ServidorHilo extends Thread {
             case 12:    
                 iniciarSesion(paquetin);
                 break;
-            case 21:
+            //case 21:
                 //¿Intentar captura de nuevo? Quedan k intentos.
-                capturarDeNuevo(paquetin);
-                break;
+                //capturarDeNuevo(paquetin);
+                //break;
             case 22:
                 //Envía pokemon capturado    
                 pokemonCapturado(paquetin);
@@ -249,26 +253,6 @@ public class ServidorHilo extends Thread {
     }
 
 
-/**
-*Obtiene el n&uacute;mero de intentos restantes
-*Si se agotaron los intentos, responde al cliente con el c&oacute;digo de respuesta 23 (Número de intentos de captura agotados.)
-*
-*Si a&uacute;n le restan intentos, envía al cliente el c&oacute;digo de respuesta 21 (¿Intentar captura de nuevo? Quedan k intentos.)
-*/
-public boolean capturarDeNuevo(Protocolo paquetin){
-    String [] ma = paquetin.obtenerMA(); //obtenemos el mensaje de aplicación
-    String intentos = ma[2]; //el numero de intentos restantes
-
-    if(intentos.equals("0") ){
-        //agotó sus intentos
-        return false;
-    }else{
-        //aún tiene intentos
-        return true;
-    }
-}
-
-
     /**
     *1- Consulta a la base cuantos registros de pokemon hay.
     *2- Elige un pokemon aleatorio para enviarlo al cliente
@@ -301,6 +285,7 @@ public boolean capturarDeNuevo(Protocolo paquetin){
 
             //2-SOLICITAMOS UN POKEMON ALEATORIO
             aleatorio = (int) (Math.random() * np) + 1; //Selecciona un número aleatorio entre 1 y np
+            idPokemon = aleatorio;
 
             query = "select * from Pokemon where idPokemon = "+aleatorio; //solicitamos un pokemon aleatorio a la BD
 
@@ -311,6 +296,9 @@ public boolean capturarDeNuevo(Protocolo paquetin){
             }
 
             conexion.close(); //se cierra la conexion con la BD
+
+            imagenPokemon = imagen;
+            nombrePokemon = nombre;
 
             //Construimos el paquete de respuesta para enviar al cliente:
             String[] m = new String[4];
@@ -410,51 +398,64 @@ public boolean capturarDeNuevo(Protocolo paquetin){
     *Si a&uacute;n le restan intentos, envía al cliente el c&oacute;digo de respuesta 21 (¿Intentar captura de nuevo? Quedan k intentos.)
     *
     */
-    public boolean aceptar(Protocolo paquetin, int estadoMaquina){
+    public void aceptar(Protocolo paquetin, int estadoMaquina){
         if(estadoMaquina == 3){
-            //Construimos el paquete de respuesta para enviar al cliente:
-            String[] m = paquetin.obtenerMA(); //contruimos el "MensajeDeAplicacion"
-            m[0] = "26";
-            m[1] = m[1]; //se mantiene intacto, ya que es el ID del pokemon que se presentó previamente al usuario
-            m[2] = "3"; //intentos que tiene el cliente
 
-            prot.modificarEM(3);
-            prot.modificarCR(26);
+            //Se le dice al servidor que si se quiere capturar al pokemon, 
+            //(ya le dijimos al usuario que tiene hasta tres intentos). 
+            //Aleatoriamente (puede ser 50/50) se decide si la captura tuvo exito o no
+            //Si tiene exito se envia un CR 22 EM 5 y el pokemon que se capturó.
+            //Si no tuvo exito se envía el protocolo con EM 4 CR 21 y en la segunda 
+                //posicion del arreglo mensaje el número de intentos restantes (dos)
+
+            captura(3); // El parámetro 3 corresponde al numero de intentos restantes
+
+            
+        }else if(estadoMaquina == 4){
+
+            //Si el estado actual de la maquina es 4 Quiere decir que ya hubo al menos un intento 
+            //fallido de captura y que el cliente pideió reintentar
+
+            int intentosRestantes = Integer.parseInt(prot.obtenerMA()[2]); // Obtenemos los intentos restantes en el protocolo anterior
+
+            captura(intentosRestantes);
+        }
+
+    }
+
+    public void captura(int intentosR){
+        double captura = Math.random(); // Generamos un número aleatorio entre 0 y 1 
+                                            //para decidir si la captura fué exitosa o no
+
+        if (captura < 0.5){
+            // la captura fué exitosa registra la captura en la base de datos (insert) regresa protocolo con EM 5 CR 22 
+            ////////////////////////////////////////////////////////////////////////
+            
+            // Se hace el insert a la base de datos Esto falta
+
+            ////////////////////////////////////////////////////////////////////////
+                
+            prot.modificarEM(5);
+            prot.modificarCR(22);
+            String[] m = {"22", Integer.toString(idPokemon), imagenPokemon, nombrePokemon};
             prot.modificarMA(m);
-
-            //Protocolo respuesta = new Protocolo(9999,1111,2,26,paquetin.obtenerIdUsuario(),m);
             enviarPaquete(prot);
-            prot.print();
-            return true;
-        }else if(estadoMaquina == 4 && capturarDeNuevo(prot)){
-            //Si el estado actual de la maquina es 4 
-        //Construimos el paquete de respuesta para enviar al cliente:
-            String[] m = paquetin.obtenerMA(); //contruimos el "MensajeDeAplicacion"
-            m[0] = "21";
-            m[1] = m[1]; //se mantiene intacto, ya que es el ID del pokemon que se presentó previamente al usuario
-            int intentos = Integer.parseInt(m[2]);
-            intentos -= 1;
-
-            m[2]= Integer.toString(intentos);//convertimos de nuevo a String y almacenamos
-
-            prot.modificarEM(4);
-            prot.modificarCR(21);
-            prot.modificarMA(m);
-
-            //Protocolo respuesta = new Protocolo(9999,1111,4,21,paquetin.obtenerIdUsuario(),m);
-            enviarPaquete(prot);
-            prot.print();
-            return true;
 
         }else{
-            prot.modificarCR(23); //intentos agotados
-            enviarPaquete(prot);
-            return true;
+
+            if(intentosR >=1) {
+                // La captura falló se envia protocolo con mensaje 21 "¿Intentar capturar de nuevo?" 
+                prot.modificarEM(4);
+                prot.modificarCR(21);
+                String[] m = {"21", Integer.toString(idPokemon), Integer.toString(intentosR - 1) , null};
+                prot.modificarMA(m);
+                enviarPaquete(prot);
+            } else {
+                prot.modificarEM(0);
+                prot.modificarCR(23);
+                String[] m = {"23", null, null, null};
+            }
         }
-        //System.out.println("SERVIDOR: ERROR, Estado Maquina " + estadoMaquina + " desconocido");
-
-        
-
     }
 
 
@@ -516,7 +517,7 @@ public boolean capturarDeNuevo(Protocolo paquetin){
     public Connection conectar(){
         try{
             Class.forName("com.mysql.jdbc.Driver");
-            String BaseDeDatos = "jdbc:mysql://localhost/appPokemon?user=root&password=Bull3tproof#!&useSSL=false";
+            String BaseDeDatos = "jdbc:mysql://localhost/appPokemon?user=root&password=password&useSSL=false";
             setConexion(DriverManager.getConnection(BaseDeDatos)); 
 
 
