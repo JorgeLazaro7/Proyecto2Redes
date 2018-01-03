@@ -350,7 +350,7 @@ public class ServidorHilo extends Thread {
             query = "SELECT nombre, imagen FROM (SELECT Usuario.idUsuario, idPokemon FROM Usuario JOIN Usuario_Pokemon ON Usuario.idUsuario=Usuario_Pokemon.idUsuario) AS T1 JOIN Pokemon ON T1.idPokemon=Pokemon.idPokemon WHERE idUsuario='"+id+"'";
            
             rs = sentencia.executeQuery(query);//ejecuta la sentencia en la BD
-            conexion.close(); //se cierra la conexion con la BD
+           
 
             
             if(rs.wasNull())
