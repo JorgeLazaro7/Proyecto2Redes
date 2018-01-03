@@ -47,8 +47,6 @@ public class Cliente2 implements Serializable{
     		//if (!espera){
 	    		try{
 	    			Protocolo entrada = (Protocolo) dis.readObject();
-                    System.out.println("Protocolo recibido");
-                    entrada.print();
 
 	    			//espera = true;
 	    			leerPaquete(entrada);
@@ -99,12 +97,10 @@ public class Cliente2 implements Serializable{
                         String opcion2 = in.nextLine();
                         switch(opcion2){
                             case "s"://si
-                                System.out.println("Elegiste capturarlo");
                                 // método aceptar pasandole como parámetro solo el protocolo recibido, de ahi sacamos el estado de la máquina
                                 aceptar(entrada);
                             break;
                             case "n"://no
-                                System.out.println("Elegiste no capturar el pokemon \n\n");
                                 menuInicial();
                         }
                     }catch (java.util.InputMismatchException e){
@@ -122,7 +118,6 @@ public class Cliente2 implements Serializable{
                         String opcion2 = in.nextLine();
                         switch(opcion2){
                             case "s"://si
-                                System.out.println("Elegiste intentar de nuevo");
                                 // método aceptar pasandole como parámetro solo el protocolo recibido, de ahi sacamos el estado de la máquina
                                 aceptar(entrada);
                             break;
@@ -172,7 +167,6 @@ public class Cliente2 implements Serializable{
                 switch(opcion){
                     case 1:
                         // Se envia código de solicitar pokemon aleatorio
-                        System.out.println("\nPediste un pokemon aleatorio");
                         prot.modificarEM(1);
                         prot.modificarCR(10);
                         cambiaMA("10", null, null, null);
@@ -270,10 +264,6 @@ public class Cliente2 implements Serializable{
 
     public void enviarPaquete(Protocolo p){
     	try{
-            System.out.println("Protocolo que se va a enviar");
-            prot.print();
-            System.out.println("Mensaje de aplicacion que se va a enviar");
-            System.out.println(Arrays.toString(prot.obtenerMA()));
     		dos.reset();
     		dos.writeObject(p);
     	}catch (IOException ex) {
