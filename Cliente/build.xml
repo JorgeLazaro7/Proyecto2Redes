@@ -1,4 +1,4 @@
-<project name="Redes de Computadoras Proyecto2 Cliente" default="build">
+<project name="Redes de Computadoras Proyecto2 Cliente" default="jar">
 
   <target name = "jar" depends="build">
     <jar jarfile="appPokemonCliente.jar">
@@ -14,7 +14,7 @@
     <mkdir dir="build"/>
     <javac srcdir="src"
      destdir="build"
-     includeantruntime="false"
+     includeantruntime="false">
       <compilerarg value="-Xlint"/>
     </javac>
   </target>

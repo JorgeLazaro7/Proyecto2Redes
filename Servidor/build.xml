@@ -1,15 +1,13 @@
-<project name="Redes de Computadoras Proyecto2 Servidor" default="build">
+<project name="Redes de Computadoras Proyecto2 Servidor" default="jar">
 
-  <!--<target name = "jar" depends="build">
+  <target name = "jar" depends="build">
     <jar jarfile="appPokemonServidor.jar">
       <zipfileset dir="build" prefix=""/>
-      <zipgroupfileset dir="lib" includes="*.jar" excludes=""/>
       <manifest>
-        <attribute name="Main-class" value="TSPSolucion"/>
+        <attribute name="Main-class" value="Servidor"/>
       </manifest>
     </jar>
   </target>
--->
 
   <target name="build">
     <mkdir dir="build"/>
