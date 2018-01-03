@@ -70,6 +70,7 @@ public class Cliente2 implements Serializable{
 
     	int codigoRespuesta = entrada.obtenerCR(); //Obtenemos codigo de respuesta y con base en el crearemos el paquete que se va a responder
     	Scanner in = new Scanner(System.in);
+        boolean valido = true;
 
         switch(codigoRespuesta){
             case 24: 
@@ -78,50 +79,7 @@ public class Cliente2 implements Serializable{
 
                 prot.modificarIdUsuario(entrada.obtenerIdUsuario());
 
-                // Muestra menú (Ver pokedex, solicitar pokemon, salir)
-            	System.out.println("Elige una opción:");
-            	System.out.println("1: Buscar Pokemon");
-            	System.out.println("2: Ver pokedex");
-            	System.out.println("3: Salir\n");
-            	System.out.println("Opción: -> ");
-            	boolean valido = true;
-            	do{
-            		try {
-	            	int opcion = in.nextInt();
-	            	
-			            switch(opcion){
-			            	case 1:
-			            		// Se envia código de solicitar pokemon aleatorio
-			            		System.out.println("\nPediste un pokemon aleatorio");
-			            		prot.modificarEM(1);
-			            		prot.modificarCR(10);
-			            		cambiaMA("10", null, null, null);
-			            		prot.modificarMA(mensajeAplicacion);
-			            		enviarPaquete(prot);
-			            		//ejecutar();
-			            		//espera= false;
-			           			//cerrar= true;
-			           		break;
-			           		case 2:
-			           			// Se envia código para ver pokedex
-			           			System.out.println("\nPediste ver tu pokedex");
-			           			//cerrar= true;
-			           		break;
-			           		case 3:
-			           			System.out.println("\nAdios");
-			           			cerrar = true;
-			           		break;
-			           		default:
-		            			System.out.println("Opcion incorrecta");
-		            			valido = false;
-		            		break;
-			            }
-		            }catch (java.util.InputMismatchException e){
-		            	System.out.println("Opcion incorrecta");
-		            	valido = false;
-            	   		in.nextLine();
-        			}
-	            } while(!valido); 
+                menuInicial(); // menu, que deseas hacer? capturar pokemon, ver pokedex, salir
 
             break;
             case 25: //inicio de sesion fallido
@@ -146,7 +104,31 @@ public class Cliente2 implements Serializable{
                                 aceptar(entrada);
                             break;
                             case "n"://no
-                                System.out.println("Elegiste no capturar el pokemon");
+                                System.out.println("Elegiste no capturar el pokemon \n\n");
+                                //método rechazar pasando como parámetro solo el protocolo recibido, de ahi sacamos el estado de la máquina
+
+                        }
+                    }catch (java.util.InputMismatchException e){
+                        System.out.println("Opcion incorrecta");
+                        valido = false;
+                        in.nextLine();
+                    }
+                }while(!valido);
+            break;
+            case 21:
+                System.out.println("¡Escapó! ¿Quieres intentar capturarlo de nuevo? s/n");
+                valido = true;
+                do{
+                    try{
+                        String opcion2 = in.nextLine();
+                        switch(opcion2){
+                            case "s"://si
+                                System.out.println("Elegiste intentar de nuevo");
+                                // método aceptar pasandole como parámetro solo el protocolo recibido, de ahi sacamos el estado de la máquina
+                                aceptar(entrada);
+                            break;
+                            case "n"://no
+                                System.out.println("Elegiste no capturar el pokemon \n\n");
                                 //método rechazar pasando como parámetro solo el protocolo recibido, de ahi sacamos el estado de la máquina
 
                         }
@@ -164,15 +146,67 @@ public class Cliente2 implements Serializable{
         }
     }
 
+    public void menuInicial(){
+        // Muestra menú (Ver pokedex, solicitar pokemon, salir)
+        Scanner in = new Scanner(System.in);
+        System.out.println("Elige una opción:");
+        System.out.println("1: Buscar Pokemon");
+        System.out.println("2: Ver pokedex");
+        System.out.println("3: Salir\n");
+        System.out.println("Opción: -> ");
+        boolean valido = true;
+        do{
+            try {
+                int opcion = in.nextInt();    
+                switch(opcion){
+                    case 1:
+                        // Se envia código de solicitar pokemon aleatorio
+                        System.out.println("\nPediste un pokemon aleatorio");
+                        prot.modificarEM(1);
+                        prot.modificarCR(10);
+                        cambiaMA("10", null, null, null);
+                        prot.modificarMA(mensajeAplicacion);
+                        enviarPaquete(prot);
+                        //ejecutar();
+                        //espera= false;
+                        //cerrar= true;
+                    break;
+                    case 2:
+                        // Se envia código para ver pokedex
+                        System.out.println("\nPediste ver tu pokedex");
+                        //cerrar= true;
+                    break;
+                    case 3:
+                        System.out.println("\nAdios");
+                        cerrar = true;
+                    break;
+                    default:
+                        System.out.println("Opcion incorrecta");
+                        valido = false;
+                    break;
+                }
+            }catch (java.util.InputMismatchException e){
+                System.out.println("Opcion incorrecta");
+                valido = false;
+                in.nextLine();
+            }
+        } while(!valido); 
+    }
+
     public void aceptar(Protocolo p){
         int estadoM = p.obtenerEM();
         prot.modificarCR(30);
         cambiaMA("30", null, null, null);
+        prot.modificarMA(mensajeAplicacion);
         switch(estadoM){
             case 2: 
                 System.out.println("Elegiste capturar el pokemon");
                 prot.modificarEM(3);
-                prot.modificarMA(mensajeAplicacion);
+                enviarPaquete(prot);
+            break;
+            case 4: 
+                System.out.println("Elegiste volver a intentarlo");
+                prot.modificarEM(4);
                 enviarPaquete(prot);
             break;
             default:
