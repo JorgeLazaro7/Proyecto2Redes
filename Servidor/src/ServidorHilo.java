@@ -350,6 +350,8 @@ public class ServidorHilo extends Thread {
             query = "SELECT nombre, imagen FROM (SELECT Usuario.idUsuario, idPokemon FROM Usuario JOIN Usuario_Pokemon ON Usuario.idUsuario=Usuario_Pokemon.idUsuario) AS T1 JOIN Pokemon ON T1.idPokemon=Pokemon.idPokemon WHERE idUsuario='"+id+"'";
            
             rs = sentencia.executeQuery(query);//ejecuta la sentencia en la BD
+            conexion.close(); //se cierra la conexion con la BD
+
             
             if(rs.wasNull())
               System.out.println("consulta vacía");  
@@ -358,7 +360,7 @@ public class ServidorHilo extends Thread {
                 
                 nombre = rs.getString(1);//obtenemos el resultado de la BD
                 imagen += rs.getString(2);//obtenemos el resultado de la BD
-                pokedex += "\n\n" + nombre + "\n" + imagen;
+                pokedex += "\n\n" + nombre + "\n" + imagen+ "\n" + imagen;
                 
             }
 
@@ -425,12 +427,18 @@ public class ServidorHilo extends Thread {
 
     }
 
+/**
+*Genera un número aleatorio, si es menor que 0.5 -> la captura fué exitosa y guarda el pokemon en la BD
+*Si es mayor igual que uno, no se capturó el pokemon y pregunta al cliente si desea intentarlo de nuevo
+*
+*/
     public void captura(int intentosR){
         double captura = Math.random(); // Generamos un número aleatorio entre 0 y 1 
                                             //para decidir si la captura fué exitosa o no
         ResultSet rs;
         String query="";
         Statement sentencia;
+        int rows;
 
 
         if (captura < 0.5){
@@ -443,7 +451,9 @@ public class ServidorHilo extends Thread {
                 sentencia = conexion.createStatement();//creamos la conexion con la BD
                 query = "Insert into Usuario_Pokemon (idUsuario,idPokemon) values ("+prot.obtenerIdUsuario()+","+idPokemon+")";
                 
-                rs = sentencia.executeQuery(query);//ejecuta la sentencia en la BD
+                rows = sentencia.executeUpdate(query);//ejecuta la sentencia en la BD
+                System.out.println("Inserción a la BD");
+                conexion.close(); //se cierra la conexion con la BD
 
             }catch (SQLException e) {
                 e.printStackTrace(); 
