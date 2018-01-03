@@ -92,7 +92,7 @@ public class Cliente2 implements Serializable{
             	System.out.println("¡Encontraste un pokemon!\n");
             	System.out.println(entrada.obtenerMA()[3] + "\n");
             	System.out.println(entrada.obtenerMA()[2] + "\n\n");
-            	System.out.println("¿Quieres capturarlo?  s/n");
+            	System.out.println("¿Quieres capturarlo? s/n \nTienes tres intentos");
                 valido = true;
                 do{
                     try{
@@ -105,7 +105,7 @@ public class Cliente2 implements Serializable{
                             break;
                             case "n"://no
                                 System.out.println("Elegiste no capturar el pokemon \n\n");
-                                //método rechazar pasando como parámetro solo el protocolo recibido, de ahi sacamos el estado de la máquina
+                                menuInicial();
 
                         }
                     }catch (java.util.InputMismatchException e){
@@ -116,7 +116,7 @@ public class Cliente2 implements Serializable{
                 }while(!valido);
             break;
             case 21:
-                System.out.println("¡Escapó! ¿Quieres intentar capturarlo de nuevo? s/n");
+                System.out.println("\n\n¡Escapó! ¿Quieres intentar capturarlo de nuevo? s/n");
                 valido = true;
                 do{
                     try{
@@ -129,7 +129,7 @@ public class Cliente2 implements Serializable{
                             break;
                             case "n"://no
                                 System.out.println("Elegiste no capturar el pokemon \n\n");
-                                //método rechazar pasando como parámetro solo el protocolo recibido, de ahi sacamos el estado de la máquina
+                                menuInicial();
 
                         }
                     }catch (java.util.InputMismatchException e){
@@ -138,6 +138,12 @@ public class Cliente2 implements Serializable{
                         in.nextLine();
                     }
                 }while(!valido);
+            break;
+            case 22:
+                System.out.println("\n\nFelicidades! capturaste un "+ entrada.obtenerMA()[3] + "\n\n");
+                System.out.println(entrada.obtenerMA()[2]);
+                System.out.println("\n\nPuedes verlo en tu pokedex \n \n \n");
+                menuInicial();
             break;
             default:
                 System.out.println("Error en el protocolo: Mensaje " + codigoRespuesta + " desconocido");
