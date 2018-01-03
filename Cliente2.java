@@ -89,7 +89,7 @@ public class Cliente2 implements Serializable{
             	//cerrar = true;
             break;
             case 20:
-            	System.out.println("¡Encontraste un pokemon!\n");
+            	System.out.println("\n\n¡Encontraste un pokemon!\n");
             	System.out.println(entrada.obtenerMA()[3] + "\n");
             	System.out.println(entrada.obtenerMA()[2] + "\n\n");
             	System.out.println("¿Quieres capturarlo? s/n \nTienes tres intentos");
@@ -106,7 +106,6 @@ public class Cliente2 implements Serializable{
                             case "n"://no
                                 System.out.println("Elegiste no capturar el pokemon \n\n");
                                 menuInicial();
-
                         }
                     }catch (java.util.InputMismatchException e){
                         System.out.println("Opcion incorrecta");
@@ -145,6 +144,10 @@ public class Cliente2 implements Serializable{
                 System.out.println("\n\nPuedes verlo en tu pokedex \n \n \n");
                 menuInicial();
             break;
+            case 11:
+                //recibe la pokedex
+                System.out.println("Esta es tu pokedex");
+                System.out.println(entrada.obtenerMA()[2]);
             default:
                 System.out.println("Error en el protocolo: Mensaje " + codigoRespuesta + " desconocido");
                 desconectar();
@@ -180,6 +183,11 @@ public class Cliente2 implements Serializable{
                     case 2:
                         // Se envia código para ver pokedex
                         System.out.println("\nPediste ver tu pokedex");
+                        prot.modificarEM(8);
+                        prot.modificarCR(11);
+                        cambiaMA("11", null, null, null);
+                        prot.modificarMA(mensajeAplicacion);
+                        enviarPaquete(prot);
                         //cerrar= true;
                     break;
                     case 3:
