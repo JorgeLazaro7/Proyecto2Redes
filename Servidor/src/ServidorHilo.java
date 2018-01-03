@@ -119,10 +119,10 @@ public class ServidorHilo extends Thread {
                 //¿Intentar captura de nuevo? Quedan k intentos.
                 //capturarDeNuevo(paquetin);
                 //break;
-            case 22:
+            //case 22:
                 //Envía pokemon capturado    
-                pokemonCapturado(paquetin);
-                break;
+              //  pokemonCapturado(paquetin);
+                //break;
             case 23:    
                 System.out.println("23");
                 break;
@@ -414,7 +414,7 @@ public class ServidorHilo extends Thread {
         }else if(estadoMaquina == 4){
 
             //Si el estado actual de la maquina es 4 Quiere decir que ya hubo al menos un intento 
-            //fallido de captura y que el cliente pideió reintentar
+            //fallido de captura y que el cliente pidió reintentar
 
             int intentosRestantes = Integer.parseInt(prot.obtenerMA()[2]); // Obtenemos los intentos restantes en el protocolo anterior
 
