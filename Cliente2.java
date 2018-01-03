@@ -147,7 +147,9 @@ public class Cliente2 implements Serializable{
             case 11:
                 //recibe la pokedex
                 System.out.println("Esta es tu pokedex");
-                System.out.println(entrada.obtenerMA()[2]);
+                System.out.println(entrada.obtenerMA()[2] + "\n\n");
+                menuInicial();
+            break;
             default:
                 System.out.println("Error en el protocolo: Mensaje " + codigoRespuesta + " desconocido");
                 desconectar();
@@ -166,7 +168,7 @@ public class Cliente2 implements Serializable{
         boolean valido = true;
         do{
             try {
-                int opcion = in.nextInt();    
+                int opcion = in.nextInt();
                 switch(opcion){
                     case 1:
                         // Se envia código de solicitar pokemon aleatorio
@@ -289,6 +291,19 @@ public class Cliente2 implements Serializable{
     }
 
     public static void main(String[] args) {
+
+        System.out.println("\n\n\n                                  ,'\\ \n" 
++"    _.----.        ____         ,'  _\\   ___    ___     ____\n"
++"_,-'       `.     |    |  /`.   \\,-'    |   \\  /   |   |    \\  |`.\n"
++"\\      __    \\    '-.  | /   `.  ___    |    \\/    |   '-.   \\ |  |\n"
++" \\.    \\ \\   |  __  |  |/    ,','_  `.  |          | __  |    \\|  |\n"
++"   \\    \\/   /,' _`.|      ,' / / / /   |          ,' _`.|     |  |\n"
++"    \\     ,-'/  /   \\    ,'   | \\/ / ,`.|         /  /   \\  |     |\n"
++"     \\    \\ |   \\_/  |   `-.  \\    `'  /|  |    ||   \\_/  | |\\    |\n"
++"      \\    \\ \\      /       `-.`.___,-' |  |\\  /| \\      /  | |   |\n"
++"       \\    \\ `.__,'|  |`-._    `|      |__| \\/ |  `.__,'|  | |   |\n"
++"        \\_.-'       |__|    `-._ |              '-.|     '-.| |   |\n"
++"                                `'                            '-._|\n");
 
     	System.out.println("¡Bienvenido/a!\nPara comenzar inicia sesión");
     	
