@@ -5,7 +5,7 @@ import java.io.Console;
 import java.util.logging.*;
 import java.util.Arrays;
 
-public class Cliente2 implements Serializable{
+public class Cliente implements Serializable{
 	protected Socket sk; //Socket del cliente
     protected ObjectOutputStream dos; //Canal de salida de datos hacia el servidor
     protected ObjectInputStream dis; //Canal de entrada de datos desde el servidor
@@ -17,7 +17,7 @@ public class Cliente2 implements Serializable{
     boolean espera;
 
     //Constructor inicializamos el socket y un protocolo con valores por default
-    public Cliente2(String ipDest){
+    public Cliente(String ipDest){
 
     	try {
             //Inicializa el socket del cliente
@@ -34,7 +34,7 @@ public class Cliente2 implements Serializable{
         	mensajeAplicacion = new String[4];
 
         } catch (IOException ex) {
-            Logger.getLogger(Cliente2.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Cliente.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -51,7 +51,7 @@ public class Cliente2 implements Serializable{
 	    			//espera = true;
 	    			leerPaquete(entrada);
 	    		} catch (Exception ex) {
-	            	Logger.getLogger(Cliente2.class.getName()).log(Level.SEVERE, null, ex);
+	            	Logger.getLogger(Cliente.class.getName()).log(Level.SEVERE, null, ex);
 	            	System.out.println("no se recibió el paquete");
 	            	//conectado=false;
                     cerrar = true;
@@ -267,7 +267,7 @@ public class Cliente2 implements Serializable{
     		dos.reset();
     		dos.writeObject(p);
     	}catch (IOException ex) {
-            Logger.getLogger(Cliente2.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Cliente.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -276,7 +276,7 @@ public class Cliente2 implements Serializable{
             sk.close();
             cerrar = true;
         } catch (IOException ex) {
-            Logger.getLogger(Cliente2.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Cliente.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -297,7 +297,7 @@ public class Cliente2 implements Serializable{
 
     	System.out.println("¡Bienvenido/a!\nPara comenzar inicia sesión");
     	
-    	Cliente2 clientecito = new Cliente2(args[0]);
+    	Cliente clientecito = new Cliente(args[0]);
 
     	clientecito.iniciarSesion();
 

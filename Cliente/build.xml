@@ -1,35 +1,32 @@
-<project name="Redes de Computadoras Proyecto2 Servidor" default="build">
+<project name="Redes de Computadoras Proyecto2 Cliente" default="build">
 
-  <!--<target name = "jar" depends="build">
-    <jar jarfile="appPokemonServidor.jar">
+  <target name = "jar" depends="build">
+    <jar jarfile="appPokemonCliente.jar">
       <zipfileset dir="build" prefix=""/>
-      <zipgroupfileset dir="lib" includes="*.jar" excludes=""/>
+      <!--<zipgroupfileset dir="lib" includes="*.jar" excludes=""/>-->
       <manifest>
-        <attribute name="Main-class" value="TSPSolucion"/>
+        <attribute name="Main-class" value="Cliente"/>
       </manifest>
     </jar>
   </target>
--->
 
   <target name="build">
     <mkdir dir="build"/>
     <javac srcdir="src"
      destdir="build"
      includeantruntime="false"
-     classpath="lib/mysql-connector-java-5.1.45-bin.jar">
       <compilerarg value="-Xlint"/>
     </javac>
   </target>
   
-  <!--
+  
   <target name="clean">
     <delete dir="build"/>
-    <delete dir="dist"/>
     <delete dir="doc"/>
-    <delete file="ProyectoTSP.jar"/>
+    <delete file="appPokemonCliente.jar"/>
   </target>
 
-
+<!--
   <target name="dist" depends="build">
     <mkdir dir="dist"/>
     <jar destfile="dist/FrameworkAG.jar:lib/TSPLIB4J-0.2.jar" basedir="build"/>

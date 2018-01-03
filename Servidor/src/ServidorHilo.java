@@ -546,7 +546,7 @@ public class ServidorHilo extends Thread {
     public Connection conectar(){
         try{
             Class.forName("com.mysql.jdbc.Driver");
-            String BaseDeDatos = "jdbc:mysql://localhost/appPokemon?user=root&password=Bull3tproof#!&useSSL=false";
+            String BaseDeDatos = "jdbc:mysql://localhost/appPokemon?user=root&password=password&useSSL=false";
             setConexion(DriverManager.getConnection(BaseDeDatos)); 
 
 
